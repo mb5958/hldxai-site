@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>会理电信 · TeleAgent AI 演示站</title>
+<style>
+  :root{
+    --c-bg:#f8f6f6;--c-surface:#fff;--c-line:#d0d0d0;--c-line-2:#b0b0b0;
+    --c-ink:#1a1a1a;--c-ink-2:#4a4a4a;--c-ink-3:#888;
+    --c-red:#c41e3a;--grad:#c41e3a;--grad-soft:rgba(196,30,58,.06);
+    --grad-black:linear-gradient(120deg,#2a2a2a 0%,#1a1a1a 52%,#0a0a0a 100%);
+    --shadow-sm:0 1px 2px rgba(0,0,0,.06);--shadow-md:0 1px 2px rgba(0,0,0,.04),0 12px 32px -16px rgba(0,0,0,.12);
+    --shadow-lg:0 2px 4px rgba(0,0,0,.04),0 24px 56px -20px rgba(0,0,0,.15);
+    --radius:20px;--radius-s:14px;
+    --font:"PingFang SC","Microsoft YaHei",-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--font);background:var(--c-bg);color:var(--c-ink);line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  ::selection{background:rgba(196,30,58,.18)}
+  ::-webkit-scrollbar{width:11px}::-webkit-scrollbar-track{background:#f0f0f0}::-webkit-scrollbar-thumb{background:#b0b0b0;border-radius:8px}
+
+  .grad{color:var(--c-red)}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 5vw}
+  section{padding:100px 0}
+
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--c-line);transition:.3s}
+  nav.scrolled{box-shadow:0 2px 16px rgba(0,0,0,.06)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:64px;max-width:1100px;margin:0 auto;padding:0 5vw}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:16px}
+  .brand .logo{width:34px;height:34px;border-radius:10px;background:var(--grad-black);display:grid;place-items:center;color:#fff;font-size:18px}
+  .links{display:flex;gap:28px}
+  .links a{color:var(--c-ink-2);text-decoration:none;font-size:14px;font-weight:600;transition:.2s;position:relative}
+  .links a:hover{color:var(--c-red)}
+  .links a::after{content:"";position:absolute;bottom:-4px;left:0;width:0;height:2px;background:var(--c-red);transition:.3s}
+  .links a:hover::after{width:100%}
+
+  #hero{padding-top:140px;padding-bottom:60px}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--c-red);background:var(--grad-soft);border:1px solid rgba(196,30,58,.2);padding:7px 16px;border-radius:100px;margin-bottom:22px}
+  .hero-badge .pin{width:8px;height:8px;border-radius:50%;background:var(--c-red);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .hero h1{font-size:clamp(36px,5vw,56px);font-weight:800;line-height:1.15;letter-spacing:-1px;margin-bottom:20px}
+  .hero h1 .grad{color:var(--c-red)}
+  .hero p{color:var(--c-ink-2);font-size:18px;max-width:620px;margin-bottom:36px}
+  .hero-cta{display:flex;gap:16px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:13px;font-size:15px;font-weight:700;text-decoration:none;transition:.3s;border:none;cursor:pointer}
+  .btn-primary{background:var(--grad-black);color:#fff;box-shadow:0 8px 24px -8px rgba(0,0,0,.4)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px -8px rgba(0,0,0,.5)}
+  .btn-ghost{background:#fff;color:var(--c-ink);border:1px solid var(--c-line-2)}
+  .btn-ghost:hover{border-color:var(--c-red);color:var(--c-red)}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:56px}
+  .stat{background:var(--c-surface);border:1px solid var(--c-line);border-radius:var(--radius-s);padding:24px 20px;text-align:center;box-shadow:var(--shadow-sm);transition:.3s}
+  .stat:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--c-line-2)}
+  .stat .num{font-size:36px;font-weight:800;color:var(--c-red);line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+  .stat .num small{font-size:16px;font-weight:600;color:var(--c-ink-3);margin-left:2px}
+  .stat .lbl{font-size:13.5px;color:var(--c-ink-2);margin-top:10px;font-weight:500}
+
+  .sec-head{text-align:center;margin-bottom:48px}
+  .sec-head .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;letter-spacing:1px;color:var(--c-red);background:var(--grad-soft);padding:6px 16px;border-radius:100px;margin-bottom:16px}
+  .sec-head .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--c-red)}
+  .sec-head h2{font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-.5px;line-height:1.2}
+  .sec-head h2 .grad{color:var(--c-red)}
+  .sec-head p{color:var(--c-ink-2);font-size:16px;max-width:580px;margin:14px auto 0}
+
+  .wb-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:28px}
+  .wb-card{background:var(--c-surface);border:1px solid var(--c-line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);transition:.35s;text-decoration:none;color:inherit;display:flex;flex-direction:column}
+  .wb-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg);border-color:var(--c-line-2)}
+  .wb-cover{height:200px;position:relative;overflow:hidden;display:grid;place-items:center}
+  .wb-cover::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,#fff 0%,#fef6f6 100%)}
+  .wb-cover .icon{position:relative;font-size:64px;z-index:1}
+  .wb-cover .tag{position:absolute;top:16px;right:16px;background:var(--grad-black);color:#fff;font-size:12px;font-weight:700;padding:5px 12px;border-radius:8px;z-index:1}
+  .wb-body{padding:28px 26px;flex:1;display:flex;flex-direction:column}
+  .wb-body h3{font-size:22px;font-weight:800;margin-bottom:10px}
+  .wb-body h3 .grad{color:var(--c-red)}
+  .wb-body p{color:var(--c-ink-2);font-size:15px;margin-bottom:18px;flex:1}
+  .wb-meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+  .wb-meta span{font-size:12.5px;font-weight:600;color:var(--c-ink-2);background:var(--c-bg);border:1px solid var(--c-line);padding:5px 12px;border-radius:8px}
+  .wb-meta span.red{color:var(--c-red);border-color:rgba(196,30,58,.2);background:var(--grad-soft)}
+  .wb-go{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:700;color:var(--c-red);transition:.2s}
+  .wb-card:hover .wb-go{gap:12px}
+  .wb-go .arrow{transition:transform .3s}
+  .wb-card:hover .wb-go .arrow{transform:translateX(3px)}
+
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .feat-card{background:var(--c-surface);border:1px solid var(--c-line);border-radius:var(--radius-s);padding:30px 26px;box-shadow:var(--shadow-sm);transition:.3s}
+  .feat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+  .feat-ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:24px;margin-bottom:18px}
+  .feat-ic.black{background:var(--grad-black);color:#fff}
+  .feat-ic.red{background:var(--grad-soft);color:var(--c-red);border:1px solid rgba(196,30,58,.2)}
+  .feat-card h4{font-size:17px;font-weight:800;margin-bottom:10px}
+  .feat-card p{color:var(--c-ink-2);font-size:14.5px}
+
+  footer{text-align:center;padding:60px 20px;border-top:1px solid var(--c-line);background:#fff}
+  footer .fb{font-weight:800;font-size:18px;margin-bottom:8px;color:var(--c-ink)}
+  footer .fb .grad{color:var(--c-red)}
+  footer .fs{color:var(--c-ink-3);font-size:13px;margin-bottom:6px}
+  footer a{color:var(--c-red);text-decoration:none}
+
+  canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+  .halo{position:fixed;border-radius:50%;filter:blur(80px);z-index:-1;pointer-events:none;opacity:.5}
+  .halo-1{width:500px;height:500px;background:rgba(196,30,58,.06);top:-100px;right:-100px}
+  .halo-2{width:400px;height:400px;background:rgba(196,30,58,.04);bottom:-50px;left:-50px}
+
+  .reveal{opacity:0;transform:translateY(12px);transition:opacity .5s ease,transform .5s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(max-width:920px){
+    .links{display:none}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .wb-grid{grid-template-columns:1fr}
+    .feat-grid{grid-template-columns:1fr}
+    section{padding:70px 0}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="dust"></canvas>
+<div class="halo halo-1"></div><div class="halo halo-2"></div>
+
+<nav id="nav">
+  <div class="nav-in">
+    <div class="brand"><div class="logo">✦</div>会理电信 · AI 演示</div>
+    <div class="links">
+      <a href="#workbenchs">工作台</a>
+      <a href="#features">核心能力</a>
+      <a href="#about">关于</a>
+    </div>
+  </div>
+</nav>
+
+<section id="hero">
+  <div class="wrap">
+    <div class="hero-badge"><span class="pin"></span>中国电信会理分公司 · TeleAgent 智能体演示站</div>
+    <h1>会动手的 <span class="grad">AI 办公助手</span><br>不只是聊天，是真的能干活</h1>
+    <p>TeleAgent（星辰超级智能体）是装在企业电脑里的 AI 办公助手——能打开文档、算数据、排格式、生成报告和演示文稿，还能定时自动干活、越用越懂你。</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#workbenchs">查看行业工作台</a>
+      <a class="btn btn-ghost" href="#features">了解核心能力</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="num">2<small>个</small></div><div class="lbl">行业工作台</div></div>
+      <div class="stat"><div class="num">24<small>+</small></div><div class="lbl">AI 技能</div></div>
+      <div class="stat"><div class="num">-93<small>%</small></div><div class="lbl">文档处理耗时</div></div>
+      <div class="stat"><div class="num">0</div><div class="lbl">到期遗漏</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="workbenchs">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow"><span class="dot"></span>行业工作台</div>
+      <h2>为不同行业 <span class="grad">量身定制</span> 的 AI 演示</h2>
+      <p>每个工作台都针对特定行业的真实痛点设计，包含客户画像、场景推荐、案例模拟演示，点击进入体验。</p>
+    </div>
+    <div class="wb-grid">
+      <a class="wb-card reveal" href="/yuhu-huida.html">
+        <div class="wb-cover">
+          <div class="icon">🚌</div>
+          <div class="tag">公共交通</div>
+        </div>
+        <div class="wb-body">
+          <h3>御湖惠达 · <span class="grad">TeleAgent 工作台</span></h3>
+          <p>为会理御湖惠达公共交通有限公司打造——运营报表一键生成、政府汇报材料成稿、车辆年检到期提醒、安全例会纪要整理，12 大场景全面覆盖。</p>
+          <div class="wb-meta">
+            <span class="red">12 场景</span>
+            <span>新能源公交</span>
+            <span>国有全资</span>
+          </div>
+          <span class="wb-go">进入工作台 <span class="arrow">→</span></span>
+        </div>
+      </a>
+      <a class="wb-card reveal" href="/teacher.html">
+        <div class="wb-cover">
+          <div class="icon">📚</div>
+          <div class="tag">教育行业</div>
+        </div>
+        <div class="wb-body">
+          <h3>会理教师团体 · <span class="grad">教学工作台</span></h3>
+          <p>为会理教师团体打造——教案撰写辅助、课件一键生成、试卷自动出题、学生成绩分析、教学会议纪要整理，让老师把精力放回课堂本身。</p>
+          <div class="wb-meta">
+            <span class="red">11 场景</span>
+            <span>教学辅助</span>
+            <span>教师福利</span>
+          </div>
+          <span class="wb-go">进入工作台 <span class="arrow">→</span></span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow"><span class="dot"></span>核心能力</div>
+      <h2>TeleAgent <span class="grad">三大核心能力</span></h2>
+      <p>本地处理不联网、长期记忆越用越懂你、定时任务无人值守。</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card reveal">
+        <div class="feat-ic black">🔒</div>
+        <h4>本地数据处理</h4>
+        <p>文档在电脑本地处理，不上传、不下载，处理内部报表、合同等敏感资料更安心。</p>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-ic red">✨</div>
+        <h4>长期记忆</h4>
+        <p>记住公司信息、常用模板与你的偏好，第一次教它，之后自动套用，越用越顺手。</p>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-ic black">⏰</div>
+        <h4>定时任务</h4>
+        <p>到点自动执行，不用人守着——每天早 8 点自动生成前一日运营简报，0 遗漏。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow"><span class="dot"></span>关于</div>
+      <h2>中国电信 <span class="grad">星辰超级智能体</span></h2>
+      <p>TeleAgent 是中电信人工智能科技发展有限公司自主研发的通用智能体，面向企业办公场景，提供文档处理、数据分析、演示制作、定时自动化等 AI 能力。</p>
+    </div>
+    <div class="feat-card reveal" style="max-width:680px;margin:0 auto;text-align:center;padding:40px">
+      <div class="feat-ic red" style="margin:0 auto 18px">✦</div>
+      <h4 style="font-size:20px;margin-bottom:12px">会理电信 · TeleAgent AI 演示站</h4>
+      <p style="margin-bottom:20px">本站由 TeleAgent 行拓助手生成并自动部署，展示 TeleAgent 在不同行业的应用场景与案例演示。</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <span style="font-size:12.5px;font-weight:600;color:var(--c-ink-2);background:var(--c-bg);border:1px solid var(--c-line);padding:5px 12px;border-radius:8px">GitHub 托管</span>
+        <span style="font-size:12.5px;font-weight:600;color:var(--c-ink-2);background:var(--c-bg);border:1px solid var(--c-line);padding:5px 12px;border-radius:8px">Vercel 部署</span>
+        <span style="font-size:12.5px;font-weight:600;color:var(--c-red);background:var(--grad-soft);border:1px solid rgba(196,30,58,.2);padding:5px 12px;border-radius:8px">hldxai.cn</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="fb">会理电信 · <span class="grad">TeleAgent AI 演示站</span></div>
+  <div class="fs">中国电信股份有限公司会理分公司 · TeleAgent 星辰超级智能体</div>
+  <div class="fs">本站由 TeleAgent 行拓助手生成并自动部署 · <a href="https://hldxai.cn">hldxai.cn</a></div>
+</footer>
+
+<script>
+window.addEventListener("scroll",()=>{document.getElementById("nav").classList.toggle("scrolled",window.scrollY>40)});
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:0,rootMargin:"0px 0px 30% 0px"});
+document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+(function(){const c=document.getElementById("dust"),x=c.getContext("2d");let w,h,pts=[];function rs(){w=c.width=innerWidth;h=c.height=innerHeight;}rs();addEventListener("resize",rs);const N=Math.min(50,Math.floor(innerWidth/18));for(let i=0;i<N;i++)pts.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.6+.4,dx:(Math.random()-.5)*.2,dy:(Math.random()-.5)*.2});(function draw(){x.clearRect(0,0,w,h);pts.forEach(p=>{p.x+=p.dx;p.y+=p.dy;if(p.x<0||p.x>w)p.dx*=-1;if(p.y<0||p.y>h)p.dy*=-1;x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fillStyle="rgba(60,60,60,.12)";x.fill();});requestAnimationFrame(draw);})();})();
+</script>
+</body>
+</html>
