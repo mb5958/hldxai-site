@@ -304,6 +304,7 @@
   <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 4v16M16 4v16"/></symbol>
   <symbol id="i-sound" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></symbol>
   <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+  <symbol id="i-fullscreen" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
   <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
   <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></symbol>
   <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
@@ -324,6 +325,7 @@
   <div class="top-actions">
     <button class="chip" id="btnVoice"><svg class="ic"><use href="#i-sound"/></svg>解说</button>
     <button class="chip" id="btnBgm"><svg class="ic"><use href="#i-music"/></svg>音乐</button>
+    <button class="chip" id="btnFullscreen"><svg class="ic"><use href="#i-fullscreen"/></svg>全屏</button>
   </div>
 </header>
 
@@ -1104,6 +1106,7 @@ function startAuto(){
   autoOn = true;
   started = true;          // 点「自动播放」后才真正开始发声
   if(bgmOn) startBgm();    // 背景音乐先响起
+  enterFullscreen();       // 进入全屏（用户手势触发，可成功）
   $("#btnAuto").innerHTML = icon("pause") + "暂停";
   $("#btnAuto").classList.add("primary");
   // 背景音乐提前 1.5 秒，再开始口播与翻页
@@ -1130,6 +1133,30 @@ document.addEventListener("keydown", e => {
     goTo(cur + (e.key === "ArrowRight" ? 1 : -1));
   }
   if(e.key === " "){ e.preventDefault(); autoOn ? stopAuto() : startAuto(); }
+});
+
+/* ---------- 全屏 ---------- */
+const FULLSCREEN_BTN = $("#btnFullscreen");
+function enterFullscreen(){
+  const el = document.documentElement;
+  try {
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.msRequestFullscreen) el.msRequestFullscreen();
+  } catch(e) {}
+}
+function exitFullscreen(){
+  try {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    else if (document.msExitFullscreen) document.msExitFullscreen();
+  } catch(e) {}
+}
+function isFullscreen(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+}
+FULLSCREEN_BTN.addEventListener("click", () => {
+  isFullscreen() ? exitFullscreen() : enterFullscreen();
 });
 
 /* ---------- 语音与 BGM ---------- */
@@ -1281,6 +1308,9 @@ buildTelecomTimeline();
 goTo(0);
 // 注意：加载后不自动播放任何音频（语音与背景音乐），
 // 需用户点击「自动播放」按钮后才开始发声。
+// 尝试打开即全屏（多数浏览器会因安全策略拒绝无手势的全屏请求，
+// 此时用户点「自动播放」或顶部「全屏」按钮即可进入全屏）。
+enterFullscreen();
 </script>
 </body>
 </html>
