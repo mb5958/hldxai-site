@@ -997,6 +997,7 @@ let cur = 0, autoOn = false, autoTimer = null, pageTimer = null;
 const slides = [...document.querySelectorAll(".slide")];
 const dotsEl = $("#dots");
 const DEFAULT_DURATION = 12, BUFFER = 1.6;
+const BGM_LEAD_MS = 1500; // 背景音乐比口播提前开始的时间（毫秒）
 
 slides.forEach((s,i) => {
   const d = document.createElement("div");
@@ -1102,11 +1103,13 @@ function animateProgress(dur){
 function startAuto(){
   autoOn = true;
   started = true;          // 点「自动播放」后才真正开始发声
-  if(bgmOn) startBgm();    // 同时启动背景音乐
+  if(bgmOn) startBgm();    // 背景音乐先响起
   $("#btnAuto").innerHTML = icon("pause") + "暂停";
   $("#btnAuto").classList.add("primary");
-  if(cur === slides.length - 1) goTo(0);
-  else goTo(cur);
+  // 背景音乐提前 1.5 秒，再开始口播与翻页
+  const target = cur === slides.length - 1 ? 0 : cur;
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(() => { if(autoOn) goTo(target); }, BGM_LEAD_MS);
 }
 function stopAuto(){
   autoOn = false;
