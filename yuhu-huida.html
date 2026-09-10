@@ -1059,7 +1059,7 @@ function goTo(i){
     }
     const a = audioPool[i];
     a.currentTime = 0;
-    if(voiceOn){ duckBgm(true); a.play().catch(()=>{}); if(autoOn) scheduleNext(a); }
+    if(voiceOn && started){ duckBgm(true); a.play().catch(()=>{}); if(autoOn) scheduleNext(a); }
     else { duckBgm(false); if(autoOn) scheduleNext(a); }
   } else {
     duckBgm(false);
@@ -1101,6 +1101,8 @@ function animateProgress(dur){
 }
 function startAuto(){
   autoOn = true;
+  started = true;          // 点「自动播放」后才真正开始发声
+  if(bgmOn) startBgm();    // 同时启动背景音乐
   $("#btnAuto").innerHTML = icon("pause") + "暂停";
   $("#btnAuto").classList.add("primary");
   if(cur === slides.length - 1) goTo(0);
@@ -1129,6 +1131,7 @@ document.addEventListener("keydown", e => {
 
 /* ---------- 语音与 BGM ---------- */
 let voiceOn = true, bgmOn = true;
+let started = false; // 是否已点「自动播放」开始播放（加载后静音，点自动播放才发声）
 let bgmCtx = null, bgmGain = null, bgmNodes = [];
 let bgmAudio = null; // Mureka 生成的真实背景音乐（DATA.bgm.audio 存在时使用）
 let bgmResumeBound = false; // 自动播放被阻止后，是否已绑定首次交互恢复
@@ -1273,8 +1276,8 @@ bindDemo();
 buildSvgScenes();
 buildTelecomTimeline();
 goTo(0);
-// 背景音乐默认播放（浏览器可能阻止，startBgm 内含首次交互自动恢复）
-if(bgmOn) startBgm();
+// 注意：加载后不自动播放任何音频（语音与背景音乐），
+// 需用户点击「自动播放」按钮后才开始发声。
 </script>
 </body>
 </html>
