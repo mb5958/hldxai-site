@@ -939,7 +939,10 @@ header {
 #map-scene {
   position: fixed; inset: 0; flex-direction: column;
   width: 100vw; height: 100vh;
+  height: 100dvh;                 /* 移动端地址栏伸缩时不再切掉底部 */
   background: #231c19; overflow: hidden;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* 顶部导航必须始终覆盖在地图上方，避免原始 CSS 外泄为可见文字 */
@@ -955,15 +958,21 @@ header {
     padding: 0 14px;
     padding-top: env(safe-area-inset-top, 0px);
   }
-  .brand-badge { font-size: 11px; padding: 3px 8px; letter-spacing: 0; }
-  .brand-title { font-size: 15px; letter-spacing: 1px; }
+  /* 窄屏 header 必须收得住：角标与副标题让位给操作按钮，避免右侧被裁 */
+  header { gap: 8px; }
+  .brand { gap: 6px; min-width: 0; overflow: hidden; }
+  .brand-badge { display: none; }
+  .brand-title { font-size: 13px; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .brand-subtitle { display: none; }
-  .audio-btn { font-size: 11px; padding: 5px 10px; }
+  .header-actions { flex-shrink: 0; gap: 6px; }
+  .audio-btn { font-size: 10px; padding: 5px 9px; gap: 4px; white-space: nowrap; }
 
   .map-controls { right: 10px; top: 66px; gap: 6px; }
   .ctrl-btn { width: 36px; height: 36px; font-size: 17px; }
 
-  .quick-spots { bottom: 150px; left: 10px; right: 10px; gap: 7px; }
+  .quick-spots { bottom: 158px; left: 10px; right: 10px; gap: 7px; }
+  /* 底部讲解卡在叠了安全区之后会更高，给地图多留一点呼吸空间 */
+  #map-scene { --dock-h: 0px; }
   .spot-pill { font-size: 12px; padding: 7px 13px; }
 
   .guide-dock {
@@ -978,6 +987,23 @@ header {
   .guide-title-active { font-size: 14px; }
   .guide-text { font-size: 13px; line-height: 1.5; }
   .state-switchers { display: none; }
+
+  /* 触摸体验：地图区域禁止长按选中与点击高亮，避免拖动时出现蓝色块 */
+  #map-container, #map-container * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  #map-container { touch-action: none; }
+
+  /* 手机端景点标签补偿放大，保证缩到整城可见时仍清晰可点 */
+  .spot-badge-inner { transform-box: fill-box; transform-origin: center bottom; }
+}
+
+/* 超窄屏（<=380px，如 iPhone SE / 小屏安卓）：按钮只留图标，彻底杜绝换行与裁切 */
+@media (max-width: 380px) {
+  #audio-text-voice, #audio-text-bgm { display: none; }
+  .audio-btn { padding: 6px 9px; }
+  .brand-title { font-size: 12px; }
 
   /* 欢迎页 HUD 移动端适配 */
   .hud-header { padding: 10px 12px; flex-wrap: wrap; gap: 8px; }
@@ -996,6 +1022,26 @@ header {
   .overlay-subtitle { font-size: 13px; }
   .fairy-hero-container {
     /* 让仙子与祥云整体上移，避免被底部对话框遮挡 */ transform: scale(0.82); }
+}
+
+/* 景点标签：内层单独承载「相机缩放补偿 --bs」，避免与定位/动效的 transform 打架 */
+.spot-badge-inner { transform: scale(var(--bs, 1)); transform-origin: center bottom; }
+.spot-group:hover .spot-badge-inner { transform: scale(calc(var(--bs, 1) * 1.08)); }
+/* 弹跳动画叠加 --bs，否则会把补偿缩放覆盖掉 */
+@keyframes pinBounce {
+  0% { transform: scale(var(--bs, 1)) translateY(0); }
+  100% { transform: scale(var(--bs, 1)) translateY(-14px); }
+}
+
+/* 欢迎页顶部声音开关：窄屏收窄到单行，避免「开启」被折到第二行 */
+@media (max-width: 768px) {
+  .hud-header { padding: 8px 10px; gap: 6px; }
+  .sound-controls-group { gap: 5px; }
+  .audio-control-pill { padding: 5px 9px; font-size: 10px; gap: 4px; white-space: nowrap; }
+  .badge-tag { font-size: 10px; padding: 3px 8px; white-space: nowrap; }
+}
+@media (max-width: 380px) {
+  .audio-control-pill { padding: 5px 7px; font-size: 9.5px; }
 }
 
 /* 地图角色祥云飞行动画 */
@@ -8398,53 +8444,7 @@ FEKvbH/OVYGqsO4Bu7n+Dzf2lSlWO8NDAAAAAElFTkSuQmCC"/>
     </defs>
 
     <g id="map-world">
-      <rect x="0" y="0" width="2600" height="1700" fill="url(#grad-field)"/>
-      
-      <path d="M 600,240 Q 1300,180 2000,240 C 2050,350 2060,900 2020,1460 Q 1300,1540 580,1460 C 540,900 550,350 600,240 Z" fill="none" stroke="#68b4a2" stroke-width="48" stroke-linecap="round" stroke-linejoin="round" opacity="0.45"/>
-      <path d="M 600,240 Q 1300,180 2000,240 C 2050,350 2060,900 2020,1460 Q 1300,1540 580,1460 C 540,900 550,350 600,240 Z" fill="none" stroke="#a2e0d3" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
-
-      <rect x="680" y="320" width="1240" height="1060" rx="40" fill="#edd9be" stroke="url(#grad-wall)" stroke-width="36" stroke-linejoin="round" filter="url(#spot-shadow)"/>
-      <rect x="698" y="338" width="1204" height="1024" rx="30" fill="none" stroke="#d5be9b" stroke-width="8"/>
-
-      <g opacity="0.35">
-        <rect x="740" y="380" width="220" height="160" rx="8" fill="#505a66"/>
-        <rect x="990" y="380" width="240" height="160" rx="8" fill="#505a66"/>
-        <rect x="740" y="570" width="220" height="190" rx="8" fill="#505a66"/>
-        <rect x="990" y="570" width="240" height="190" rx="8" fill="#505a66"/>
-        <rect x="1370" y="380" width="240" height="160" rx="8" fill="#505a66"/>
-        <rect x="1640" y="380" width="220" height="160" rx="8" fill="#505a66"/>
-        <rect x="1370" y="570" width="240" height="190" rx="8" fill="#505a66"/>
-        <rect x="1640" y="570" width="220" height="190" rx="8" fill="#505a66"/>
-        <rect x="740" y="930" width="220" height="180" rx="8" fill="#505a66"/>
-        <rect x="990" y="930" width="240" height="180" rx="8" fill="#505a66"/>
-        <rect x="740" y="1140" width="220" height="180" rx="8" fill="#505a66"/>
-        <rect x="990" y="1140" width="240" height="180" rx="8" fill="#505a66"/>
-        <rect x="1370" y="930" width="240" height="180" rx="8" fill="#505a66"/>
-        <rect x="1640" y="930" width="220" height="180" rx="8" fill="#505a66"/>
-        <rect x="1370" y="1140" width="240" height="180" rx="8" fill="#505a66"/>
-        <rect x="1640" y="1140" width="220" height="180" rx="8" fill="#505a66"/>
-      </g>
-
-      <path fill="none" d="M 1300,320 L 1300,1380 M 680,850 L 1920,850" stroke="#c0aa8c" stroke-width="70" stroke-linecap="square"/>
-      <path fill="none" id="path-north-south" d="M 1300,320 L 1300,1380" stroke="#dfd2be" stroke-width="56" stroke-linecap="square"/>
-      <path fill="none" id="path-east-west" d="M 680,850 L 1920,850" stroke="#dfd2be" stroke-width="56" stroke-linecap="square"/>
-      <path fill="none" d="M 1300,320 L 1300,1380 M 680,850 L 1920,850" stroke="#bda684" stroke-width="3" stroke-dasharray="14 10"/>
-
-      <path fill="none" id="path-xicheng" d="M 1300,850 L 1150,850 L 1150,780 L 950,780" stroke="#d5c4aa" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
-      <path fill="none" id="path-kejia" d="M 1300,850 L 1450,850 L 1450,780 L 1620,780" stroke="#d5c4aa" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
-      <path fill="none" id="path-jinjiang" d="M 1300,850 L 1520,850 L 1520,1080 L 1680,1080" stroke="#d5c4aa" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
-      <path fill="none" id="path-tianzhutang" d="M 1300,850 L 1080,850 L 1080,1060 L 900,1060" stroke="#d5c4aa" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
-      <path fill="none" id="path-shiliu" d="M 1300,480 L 1720,480" stroke="#d5c4aa" stroke-width="36" stroke-linecap="round"/>
-      <path fill="none" id="path-yingzhou" d="M 1300,1260 L 1220,1260 L 1220,1360" stroke="#d5c4aa" stroke-width="36" stroke-linecap="round"/>
-
-      <g font-family="sans-serif" font-size="16" font-weight="700" fill="#7d674f" text-anchor="middle">
-        <text x="1300" y="580">北 街</text>
-        <text x="1300" y="1120">南 街</text>
-        <text x="1060" y="842">西 街</text>
-        <text x="1540" y="842">东 街</text>
-        <text x="1040" y="772" font-size="13">西成巷</text>
-        <text x="1540" y="772" font-size="13">科甲巷</text>
-      </g>
+      <rect x="0" y="0" width="2600" height="1700" fill="#f2e7d5"/><path d="M 600,240 Q 1300,180 2000,240 C 2050,350 2060,900 2020,1460 Q 1300,1540 580,1460 C 540,900 550,350 600,240 Z" fill="none" stroke="#bcd4c2" stroke-width="52" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/><path d="M 600,240 Q 1300,180 2000,240 C 2050,350 2060,900 2020,1460 Q 1300,1540 580,1460 C 540,900 550,350 600,240 Z" fill="none" stroke="#d9e8dc" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/><g fill="#c2b8ac" opacity="0.62"><rect x="160" y="200" width="460" height="400" rx="20"/><rect x="160" y="680" width="460" height="330" rx="20"/><rect x="160" y="1090" width="460" height="380" rx="20"/><rect x="1970" y="210" width="450" height="390" rx="20"/><rect x="1970" y="680" width="450" height="330" rx="20"/><rect x="1970" y="1090" width="450" height="380" rx="20"/><rect x="720" y="40" width="460" height="220" rx="20"/><rect x="1350" y="40" width="460" height="220" rx="20"/><rect x="720" y="1430" width="470" height="220" rx="20"/><rect x="1350" y="1430" width="470" height="220" rx="20"/></g><rect x="680" y="320" width="1240" height="1060" rx="46" fill="#fbf7ee"/><g fill="#b5ab9f"><rect x="700" y="340" width="268" height="225" rx="16"/><rect x="1002" y="340" width="268" height="225" rx="16"/><rect x="700" y="595" width="268" height="225" rx="16"/><rect x="1002" y="595" width="268" height="225" rx="16"/><rect x="1330" y="340" width="268" height="122" rx="16"/><rect x="1632" y="340" width="268" height="122" rx="16"/><rect x="1330" y="498" width="268" height="322" rx="16"/><rect x="1632" y="498" width="268" height="322" rx="16"/><rect x="700" y="880" width="268" height="240" rx="16"/><rect x="1002" y="880" width="268" height="240" rx="16"/><rect x="700" y="1150" width="268" height="210" rx="16"/><rect x="1002" y="1150" width="268" height="210" rx="16"/><rect x="1330" y="880" width="268" height="240" rx="16"/><rect x="1632" y="880" width="268" height="240" rx="16"/><rect x="1330" y="1150" width="268" height="210" rx="16"/><rect x="1632" y="1150" width="268" height="210" rx="16"/></g><path fill="none" id="path-north-south" d="M 1300,330 L 1300,1370" stroke="#fdfaf3" stroke-width="62" stroke-linecap="round"/><path fill="none" id="path-east-west" d="M 690,850 L 1910,850" stroke="#fdfaf3" stroke-width="62" stroke-linecap="round"/><path fill="none" id="path-xicheng" d="M 1300,850 L 1150,850 L 1150,780 L 950,780" stroke="#f7edd9" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" id="path-kejia" d="M 1300,850 L 1450,850 L 1450,780 L 1620,780" stroke="#f7edd9" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" id="path-jinjiang" d="M 1300,850 L 1520,850 L 1520,1080 L 1680,1080" stroke="#f7edd9" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" id="path-tianzhutang" d="M 1300,850 L 1080,850 L 1080,1060 L 900,1060" stroke="#f7edd9" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" id="path-shiliu" d="M 1300,480 L 1720,480" stroke="#f7edd9" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" id="path-yingzhou" d="M 1300,1260 L 1220,1260 L 1220,1360" stroke="#f7edd9" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/><rect x="680" y="320" width="1240" height="1060" rx="46" fill="none" stroke="#d3bb9c" stroke-width="34" stroke-linejoin="round" filter="url(#spot-shadow)"/><rect x="680" y="320" width="1240" height="1060" rx="46" fill="none" stroke="#e3d0b4" stroke-width="12" stroke-linejoin="round"/><g font-family="sans-serif" font-size="16" font-weight="700" fill="#a89680" text-anchor="middle" letter-spacing="2" id="street-labels"><text x="1300" y="585" font-size="17" data-base="17">北 街</text><text x="1300" y="1125" font-size="17" data-base="17">南 街</text><text x="1055" y="845" font-size="17" data-base="17">西 街</text><text x="1545" y="845" font-size="17" data-base="17">东 街</text><text x="1032" y="776" font-size="13" data-base="13">西成巷</text><text x="1552" y="776" font-size="13" data-base="13">科甲巷</text></g>
 
       <defs>
     <linearGradient id="g3-tile" x1="0" y1="0" x2="0" y2="1">
@@ -8569,9 +8569,11 @@ FEKvbH/OVYGqsO4Bu7n+Dzf2lSlWO8NDAAAAAElFTkSuQmCC"/>
           </g>
         </g>
         <g class="spot-badge spot-pin" transform="translate(1300, 610)">
-          <rect x="-65" y="-34" width="130" height="30" rx="15" fill="#d92b2b" stroke="#ffffff" stroke-width="2.5" filter="url(#spot-shadow)"/>
-          <text x="0" y="-14" fill="#ffffff" font-size="14" font-weight="700" text-anchor="middle" dominant-baseline="middle">钟鼓楼·凌霄楼</text>
-          <polygon points="0,0 -7,-6 7,-6" fill="#d92b2b"/>
+          <g class="spot-badge-inner">
+          <rect x="-64" y="-42" width="127" height="36" rx="18" fill="#e0362f" stroke="#ffffff" stroke-width="3" filter="url(#spot-shadow)"/>
+          <text x="0" y="-23" fill="#ffffff" font-size="15" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.5">钟鼓楼·凌霄楼</text>
+          <polygon points="0,0 -8,-8 8,-8" fill="#e0362f"/>
+          </g>
         </g>
       </g>
 
@@ -8629,9 +8631,11 @@ FEKvbH/OVYGqsO4Bu7n+Dzf2lSlWO8NDAAAAAElFTkSuQmCC"/>
           <path d="M 1187 176 Q 1194 197 1203 196 L 1396 196 Q 1405 197 1412 176 L 1374 151 L 1225 151 Z" fill="url(#g3-tile)" stroke="#2f353d" stroke-width="2.2"/><path d="M 1187 176 Q 1194 197 1203 196 L 1396 196 Q 1405 197 1412 176" fill="none" stroke="#aab3bb" stroke-width="2.2" opacity="0.9"/><g stroke="#2b313a" stroke-width="1" opacity="0.3"><line x1="1233" y1="192" x2="1233" y2="196"/><line x1="1255" y1="178" x2="1255" y2="196"/><line x1="1278" y1="165" x2="1278" y2="196"/><line x1="1300" y1="151" x2="1300" y2="196"/><line x1="1322" y1="165" x2="1322" y2="196"/><line x1="1345" y1="178" x2="1345" y2="196"/><line x1="1367" y1="192" x2="1367" y2="196"/></g><path d="M 1225 151 Q 1300 147 1374 151" fill="none" stroke="#d6dce1" stroke-width="3.2" opacity="0.92"/><path d="M 1227 151 C 1220 145 1214 138 1218 133 C 1222 140 1229 147 1231 152 Z" fill="#4a525b" stroke="#2f353d" stroke-width="1.2"/><path d="M 1372 151 C 1379 145 1385 138 1381 133 C 1377 140 1370 147 1368 152 Z" fill="#4a525b" stroke="#2f353d" stroke-width="1.2"/>
         </g>
         <g class="spot-badge spot-pin" transform="translate(1300, 160)">
-          <rect x="-65" y="-34" width="130" height="30" rx="15" fill="#d92b2b" stroke="#ffffff" stroke-width="2.5" filter="url(#spot-shadow)"/>
-          <text x="0" y="-14" fill="#ffffff" font-size="14" font-weight="700" text-anchor="middle" dominant-baseline="middle">北门城楼(明代)</text>
-          <polygon points="0,0 -7,-6 7,-6" fill="#d92b2b"/>
+          <g class="spot-badge-inner">
+          <rect x="-68" y="-42" width="135" height="36" rx="18" fill="#d9532b" stroke="#ffffff" stroke-width="3" filter="url(#spot-shadow)"/>
+          <text x="0" y="-23" fill="#ffffff" font-size="15" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.5">北门城楼(明代)</text>
+          <polygon points="0,0 -8,-8 8,-8" fill="#d9532b"/>
+          </g>
         </g>
       </g>
 
@@ -8680,9 +8684,11 @@ FEKvbH/OVYGqsO4Bu7n+Dzf2lSlWO8NDAAAAAElFTkSuQmCC"/>
           <g fill="url(#g3-leaf)"><circle cx="1052" cy="788" r="22"/><circle cx="1074" cy="806" r="16"/><circle cx="1040" cy="810" r="15"/></g>
         </g>
         <g class="spot-badge spot-pin" transform="translate(945, 690)">
-          <rect x="-55" y="-34" width="110" height="30" rx="15" fill="#4d7c0f" stroke="#ffffff" stroke-width="2.5" filter="url(#spot-shadow)"/>
-          <text x="0" y="-14" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">西成巷·马帮</text>
-          <polygon points="0,0 -7,-6 7,-6" fill="#4d7c0f"/>
+          <g class="spot-badge-inner">
+          <rect x="-56" y="-42" width="112" height="36" rx="18" fill="#5aa32e" stroke="#ffffff" stroke-width="3" filter="url(#spot-shadow)"/>
+          <text x="0" y="-23" fill="#ffffff" font-size="15" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.5">西成巷·马帮</text>
+          <polygon points="0,0 -8,-8 8,-8" fill="#5aa32e"/>
+          </g>
         </g>
       </g>
 
@@ -8717,9 +8723,11 @@ FEKvbH/OVYGqsO4Bu7n+Dzf2lSlWO8NDAAAAAElFTkSuQmCC"/>
           <line x1="1512" y1="748" x2="1750" y2="740" stroke="#7a4a2a" stroke-width="1.2"/>
         </g>
         <g class="spot-badge spot-pin" transform="translate(1625, 680)">
-          <rect x="-55" y="-34" width="110" height="30" rx="15" fill="#1d4ed8" stroke="#ffffff" stroke-width="2.5" filter="url(#spot-shadow)"/>
-          <text x="0" y="-14" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">科甲巷·进士第</text>
-          <polygon points="0,0 -7,-6 7,-6" fill="#1d4ed8"/>
+          <g class="spot-badge-inner">
+          <rect x="-64" y="-42" width="127" height="36" rx="18" fill="#2f6fd0" stroke="#ffffff" stroke-width="3" filter="url(#spot-shadow)"/>
+          <text x="0" y="-23" fill="#ffffff" font-size="15" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.5">科甲巷·进士第</text>
+          <polygon points="0,0 -8,-8 8,-8" fill="#2f6fd0"/>
+          </g>
         </g>
       </g>
 
@@ -8754,9 +8762,11 @@ FEKvbH/OVYGqsO4Bu7n+Dzf2lSlWO8NDAAAAAElFTkSuQmCC"/>
           <path d="M 1563 1019 Q 1571 1045 1580 1044 L 1789 1044 Q 1798 1045 1806 1019 L 1765 988 L 1604 988 Z" fill="url(#g3-tile)" stroke="#2f353d" stroke-width="2.2"/><path d="M 1563 1019 Q 1571 1045 1580 1044 L 1789 1044 Q 1798 1045 1806 1019" fill="none" stroke="#aab3bb" stroke-width="2.2" opacity="0.9"/><g stroke="#2b313a" stroke-width="1" opacity="0.3"><line x1="1630" y1="1027" x2="1630" y2="1044"/><line x1="1652" y1="1011" x2="1652" y2="1044"/><line x1="1674" y1="996" x2="1674" y2="1044"/><line x1="1696" y1="996" x2="1696" y2="1044"/><line x1="1718" y1="1011" x2="1718" y2="1044"/><line x1="1740" y1="1027" x2="1740" y2="1044"/></g><path d="M 1604 988 Q 1685 984 1765 988" fill="none" stroke="#d6dce1" stroke-width="3.2" opacity="0.92"/><path d="M 1606 988 C 1599 982 1593 975 1597 970 C 1601 977 1608 984 1610 989 Z" fill="#4a525b" stroke="#2f353d" stroke-width="1.2"/><path d="M 1763 988 C 1770 982 1776 975 1772 970 C 1768 977 1761 984 1759 989 Z" fill="#4a525b" stroke="#2f353d" stroke-width="1.2"/>
         </g>
         <g class="spot-badge spot-pin" transform="translate(1685, 970)">
-          <rect x="-55" y="-34" width="110" height="30" rx="15" fill="#b45309" stroke="#ffffff" stroke-width="2.5" filter="url(#spot-shadow)"/>
-          <text x="0" y="-14" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">金江书院</text>
-          <polygon points="0,0 -7,-6 7,-6" fill="#b45309"/>
+          <g class="spot-badge-inner">
+          <rect x="-52" y="-42" width="104" height="36" rx="18" fill="#b06a1f" stroke="#ffffff" stroke-width="3" filter="url(#spot-shadow)"/>
+          <text x="0" y="-23" fill="#ffffff" font-size="15" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.5">金江书院</text>
+          <polygon points="0,0 -8,-8 8,-8" fill="#b06a1f"/>
+          </g>
         </g>
       </g>
 
@@ -8809,9 +8819,11 @@ FEKvbH/OVYGqsO4Bu7n+Dzf2lSlWO8NDAAAAAElFTkSuQmCC"/>
           <rect x="832" y="1128" width="164" height="7" fill="#75797e"/>
         </g>
         <g class="spot-badge spot-pin" transform="translate(895, 865)">
-          <rect x="-55" y="-34" width="110" height="30" rx="15" fill="#475569" stroke="#ffffff" stroke-width="2.5" filter="url(#spot-shadow)"/>
-          <text x="0" y="-14" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">古城天主堂</text>
-          <polygon points="0,0 -7,-6 7,-6" fill="#475569"/>
+          <g class="spot-badge-inner">
+          <rect x="-52" y="-42" width="105" height="36" rx="18" fill="#6b7280" stroke="#ffffff" stroke-width="3" filter="url(#spot-shadow)"/>
+          <text x="0" y="-23" fill="#ffffff" font-size="15" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.5">古城天主堂</text>
+          <polygon points="0,0 -8,-8 8,-8" fill="#6b7280"/>
+          </g>
         </g>
       </g>
 
@@ -8861,9 +8873,11 @@ FEKvbH/OVYGqsO4Bu7n+Dzf2lSlWO8NDAAAAAElFTkSuQmCC"/>
           <g fill="#e8b957" opacity="0.75"><circle cx="1518" cy="1286" r="17"/><circle cx="1536" cy="1306" r="13"/></g>
         </g>
         <g class="spot-badge spot-pin" transform="translate(1220, 1250)">
-          <rect x="-50" y="-34" width="100" height="30" rx="15" fill="#0d9488" stroke="#ffffff" stroke-width="2.5" filter="url(#spot-shadow)"/>
-          <text x="0" y="-14" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">瀛洲园·水榭</text>
-          <polygon points="0,0 -7,-6 7,-6" fill="#0d9488"/>
+          <g class="spot-badge-inner">
+          <rect x="-56" y="-42" width="112" height="36" rx="18" fill="#1f9c8c" stroke="#ffffff" stroke-width="3" filter="url(#spot-shadow)"/>
+          <text x="0" y="-23" fill="#ffffff" font-size="15" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.5">瀛洲园·水榭</text>
+          <polygon points="0,0 -8,-8 8,-8" fill="#1f9c8c"/>
+          </g>
         </g>
       </g>
 
@@ -8934,9 +8948,11 @@ FEKvbH/OVYGqsO4Bu7n+Dzf2lSlWO8NDAAAAAElFTkSuQmCC"/>
           </g>
         </g>
         <g class="spot-badge spot-pin" transform="translate(1720, 400)">
-          <rect x="-60" y="-34" width="120" height="30" rx="15" fill="#e11d48" stroke="#ffffff" stroke-width="2.5" filter="url(#spot-shadow)"/>
-          <text x="0" y="-14" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="middle">石榴文化广场</text>
-          <polygon points="0,0 -7,-6 7,-6" fill="#e11d48"/>
+          <g class="spot-badge-inner">
+          <rect x="-60" y="-42" width="120" height="36" rx="18" fill="#e0365f" stroke="#ffffff" stroke-width="3" filter="url(#spot-shadow)"/>
+          <text x="0" y="-23" fill="#ffffff" font-size="15" font-weight="700" text-anchor="middle" dominant-baseline="middle" letter-spacing="0.5">石榴文化广场</text>
+          <polygon points="0,0 -8,-8 8,-8" fill="#e0365f"/>
+          </g>
         </g>
       </g>
       
@@ -8962,7 +8978,8 @@ FEKvbH/OVYGqsO4Bu7n+Dzf2lSlWO8NDAAAAAElFTkSuQmCC"/>
   <path d="M730 3456 C910 3546 1030 3512 1130 3458 C1250 3540 1440 3524 1730 3448" fill="none" stroke="#f9a8b8" stroke-width="13" stroke-linecap="round" opacity="0.78"/>
   <path d="M900 3320 A 96 96 0 1 1 1052 3378" fill="none" stroke="#f4c26b" stroke-width="11" stroke-linecap="round" opacity="0.55"/>
   <path d="M1330 3320 A 96 96 0 1 0 1480 3378" fill="none" stroke="#f4c26b" stroke-width="11" stroke-linecap="round" opacity="0.55"/>
-</g></g><g id="wl-shadow">
+</g></g><g id="map-decor"><g transform="translate(985 1090) scale(1.000)"><rect x="-5" y="-26" width="10" height="46" rx="4" fill="#8a6a45"/><circle cx="-26" cy="-46" r="30" fill="#7cb342"/><circle cx="26" cy="-44" r="27" fill="#8bc34a"/><circle cx="0" cy="-70" r="35" fill="#8bc34a"/><circle cx="-8" cy="-58" r="24" fill="#9ccc65" opacity="0.75"/></g><g transform="translate(1615 1090) scale(1.000)"><rect x="-5" y="-26" width="10" height="46" rx="4" fill="#8a6a45"/><circle cx="-26" cy="-46" r="30" fill="#7cb342"/><circle cx="26" cy="-44" r="27" fill="#8bc34a"/><circle cx="0" cy="-70" r="35" fill="#8bc34a"/><circle cx="-8" cy="-58" r="24" fill="#9ccc65" opacity="0.75"/></g><g transform="translate(985 562) scale(0.920)"><rect x="-5" y="-26" width="10" height="46" rx="4" fill="#8a6a45"/><circle cx="-26" cy="-46" r="30" fill="#7cb342"/><circle cx="26" cy="-44" r="27" fill="#8bc34a"/><circle cx="0" cy="-70" r="35" fill="#8bc34a"/><circle cx="-8" cy="-58" r="24" fill="#9ccc65" opacity="0.75"/></g><g transform="translate(1615 470) scale(0.920)"><rect x="-5" y="-26" width="10" height="46" rx="4" fill="#8a6a45"/><circle cx="-26" cy="-46" r="30" fill="#7cb342"/><circle cx="26" cy="-44" r="27" fill="#8bc34a"/><circle cx="0" cy="-70" r="35" fill="#8bc34a"/><circle cx="-8" cy="-58" r="24" fill="#9ccc65" opacity="0.75"/></g><g transform="translate(700 850) scale(0.860)"><rect x="-5" y="-26" width="10" height="46" rx="4" fill="#8a6a45"/><circle cx="-26" cy="-46" r="30" fill="#7cb342"/><circle cx="26" cy="-44" r="27" fill="#8bc34a"/><circle cx="0" cy="-70" r="35" fill="#8bc34a"/><circle cx="-8" cy="-58" r="24" fill="#9ccc65" opacity="0.75"/></g><g transform="translate(1900 850) scale(0.860)"><rect x="-5" y="-26" width="10" height="46" rx="4" fill="#8a6a45"/><circle cx="-26" cy="-46" r="30" fill="#7cb342"/><circle cx="26" cy="-44" r="27" fill="#8bc34a"/><circle cx="0" cy="-70" r="35" fill="#8bc34a"/><circle cx="-8" cy="-58" r="24" fill="#9ccc65" opacity="0.75"/></g><g transform="translate(1300 1370) scale(0.950)"><rect x="-5" y="-26" width="10" height="46" rx="4" fill="#8a6a45"/><circle cx="-26" cy="-46" r="30" fill="#7cb342"/><circle cx="26" cy="-44" r="27" fill="#8bc34a"/><circle cx="0" cy="-70" r="35" fill="#8bc34a"/><circle cx="-8" cy="-58" r="24" fill="#9ccc65" opacity="0.75"/></g><line x1="781" y1="742" x2="937" y2="742" stroke="#8a6a45" stroke-width="3" stroke-linecap="round"/><line x1="795" y1="742" x2="795" y2="749" stroke="#a8582f" stroke-width="2"/><ellipse cx="795" cy="761" rx="12" ry="14" fill="url(#g3-lantern)" stroke="#8c1a15" stroke-width="1.2"/><line x1="827" y1="742" x2="827" y2="749" stroke="#a8582f" stroke-width="2"/><ellipse cx="827" cy="761" rx="12" ry="14" fill="url(#g3-lantern)" stroke="#8c1a15" stroke-width="1.2"/><line x1="859" y1="742" x2="859" y2="749" stroke="#a8582f" stroke-width="2"/><ellipse cx="859" cy="761" rx="12" ry="14" fill="url(#g3-lantern)" stroke="#8c1a15" stroke-width="1.2"/><line x1="891" y1="742" x2="891" y2="749" stroke="#a8582f" stroke-width="2"/><ellipse cx="891" cy="761" rx="12" ry="14" fill="url(#g3-lantern)" stroke="#8c1a15" stroke-width="1.2"/><line x1="923" y1="742" x2="923" y2="749" stroke="#a8582f" stroke-width="2"/><ellipse cx="923" cy="761" rx="12" ry="14" fill="url(#g3-lantern)" stroke="#8c1a15" stroke-width="1.2"/><line x1="1448" y1="742" x2="1604" y2="742" stroke="#8a6a45" stroke-width="3" stroke-linecap="round"/><line x1="1462" y1="742" x2="1462" y2="749" stroke="#a8582f" stroke-width="2"/><ellipse cx="1462" cy="761" rx="12" ry="14" fill="url(#g3-lantern)" stroke="#8c1a15" stroke-width="1.2"/><line x1="1494" y1="742" x2="1494" y2="749" stroke="#a8582f" stroke-width="2"/><ellipse cx="1494" cy="761" rx="12" ry="14" fill="url(#g3-lantern)" stroke="#8c1a15" stroke-width="1.2"/><line x1="1526" y1="742" x2="1526" y2="749" stroke="#a8582f" stroke-width="2"/><ellipse cx="1526" cy="761" rx="12" ry="14" fill="url(#g3-lantern)" stroke="#8c1a15" stroke-width="1.2"/><line x1="1558" y1="742" x2="1558" y2="749" stroke="#a8582f" stroke-width="2"/><ellipse cx="1558" cy="761" rx="12" ry="14" fill="url(#g3-lantern)" stroke="#8c1a15" stroke-width="1.2"/><line x1="1590" y1="742" x2="1590" y2="749" stroke="#a8582f" stroke-width="2"/><ellipse cx="1590" cy="761" rx="12" ry="14" fill="url(#g3-lantern)" stroke="#8c1a15" stroke-width="1.2"/></g>
+      <g id="wl-shadow">
           <ellipse cx="1220" cy="3480" rx="650" ry="200" fill="#2d1c14" opacity="0.32" filter="url(#spot-shadow)"/>
         </g>
         <g id="wl-body-core">
@@ -21213,6 +21230,9 @@ function initMap() {
   if (guideStateTagEl) guideStateTagEl.textContent = '等待互动';
   if (guideTextEl) guideTextEl.innerHTML = '我已经在古城地图等你啦！请点击地图上的景点，或点击下方景点按钮，我再为你介绍。<span class="typewriter-cursor"></span>';
   setCharacterState('wl-idle');
+  // 手机端/桌面端都先让整座古城入画，用户再自由缩放平移
+  fitMap();
+  setTimeout(fitMap, 360);
 }
 
 // ==================== 地图平移缩放（含移动端触摸） ====================
@@ -21223,6 +21243,54 @@ const defaultVb = { x: 0, y: 0, w: 2600, h: 1700 };
 function updateViewBox() {
   if (mainSvg) mainSvg.setAttribute('viewBox', vbX + ' ' + vbY + ' ' + vbW + ' ' + vbH);
 }
+
+// 8 个景点 + 标签的包围盒（用户单位）——「整座古城」的基准
+var CITY = { x: 790, y: 40, w: 1160, h: 1430 };
+
+// 容器上下被 header / 底部讲解卡遮挡的像素高度，用于把城市对齐到可见区中心
+function mapInsets() {
+  var narrow = window.innerWidth <= 768;
+  return { top: narrow ? 56 : 80, bottom: narrow ? 206 : 188 };
+}
+
+// 相机复位：让整座古城完整落在「header 与底部讲解卡之间」的可见区正中。
+// 关键：viewBox 的宽高比必须等于容器宽高比，否则 preserveAspectRatio 的
+// slice 会直接裁掉内容 —— 这正是手机端原来南北两头被切出屏幕的原因。
+function fitMap() {
+  var cw = mapContainer.clientWidth || window.innerWidth || 390;
+  var ch = mapContainer.clientHeight || window.innerHeight || 700;
+  var ins = mapInsets();
+  var usable = Math.max(120, ch - ins.top - ins.bottom);
+  // 像素/用户单位：横向与纵向各算一次，取更严格的一侧，保证整城一定看得全
+  var px = Math.min(cw / (CITY.w * 1.04), usable / CITY.h);
+  vbH = ch / px;
+  vbW = vbH * (cw / ch);          // 与容器同比例，杜绝裁切
+    vbX = (CITY.x + CITY.w / 2) - vbW / 2;
+  vbY = (CITY.y + CITY.h / 2) - (ins.top + usable / 2) / px;
+  defaultVb.x = vbX; defaultVb.y = vbY; defaultVb.w = vbW; defaultVb.h = vbH;
+  updateViewBox();
+
+  // 相机拉远时，SVG 里固定尺寸的文字会等比缩小到看不清（手机端尤其明显）。
+  // 这里按「CSS 像素 / 用户单位」反算补偿倍数，写进 --bs 交给 CSS 缩放。
+  // 目标：标签文字稳定在约 8.5 CSS px —— 看得清，又不会盖住建筑本体。
+  var badgeScale = Math.max(1, Math.min(1.9, 8.5 / (15 * px)));
+  document.querySelectorAll('.spot-badge').forEach(function (el) {
+    el.style.setProperty('--bs', badgeScale.toFixed(3));
+  });
+  var streetScale = Math.max(1, Math.min(1.7, 8 / (16 * px)));
+  document.querySelectorAll('#street-labels text').forEach(function (t) {
+    var base = parseFloat(t.getAttribute('data-base') || '16');
+    t.setAttribute('font-size', (base * streetScale).toFixed(1));
+  });
+}
+
+var _fitTimer = null;
+window.addEventListener('resize', function () {
+  if (!_fitTimer) _fitTimer = setTimeout(function () { _fitTimer = null; fitMap(); }, 120);
+});
+window.addEventListener('orientationchange', function () {
+  setTimeout(fitMap, 260);
+});
 
 function beginPan(cx, cy) { isPanning = true; startX = cx; startY = cy; }
 function movePan(cx, cy) {
