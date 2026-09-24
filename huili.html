@@ -566,8 +566,8 @@
     opacity: 1;
     pointer-events: auto;
   }
-</style>
-<style>
+
+
 :root {
   --c-primary: #d92b2b;
   --c-primary-dark: #a31818;
@@ -931,7 +931,7 @@ header {
   90% { opacity: 0.8; }
   100% { transform: translate(160px, 1500px) rotate(420deg); opacity: 0; }
 }
-</style>
+
 /* ==================== 移动端与场景切换适配 ==================== */
 #map-scene { display: none; }
 #map-scene.active { display: flex; }
@@ -940,6 +940,12 @@ header {
   position: fixed; inset: 0; flex-direction: column;
   width: 100vw; height: 100vh;
   background: #231c19; overflow: hidden;
+}
+
+/* 顶部导航必须始终覆盖在地图上方，避免原始 CSS 外泄为可见文字 */
+#map-scene > header {
+  overflow: hidden;
+  isolation: isolate;
 }
 
 /* 手机端顶部与底部安全区适配 */
@@ -20624,13 +20630,30 @@ function playMapTypewriter(text, onComplete) {
   }, 22);
 }
 
+function getLixiaoliuVoice() {
+  if (!('speechSynthesis' in window)) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  const preferredNames = ['Xiaoxiao', 'Xiaoyi', 'Xiaohan', 'Ting-Ting', 'Meijia', 'Sinji', 'Google 普通话', 'Google Mandarin'];
+  for (const name of preferredNames) {
+    const exact = voices.find(function(v){ return v.name.indexOf(name) >= 0; });
+    if (exact) return exact;
+  }
+  return voices.find(function(v){
+    return /^zh(-|_)?CN/i.test(v.lang) && /female|女|xia|ting|mei|hui/i.test(v.name);
+  }) || voices.find(function(v){ return /^zh(-|_)?CN/i.test(v.lang); }) || null;
+}
+
 function speakVoice(text) {
   if (isVoiceMuted || !('speechSynthesis' in window)) return;
   window.speechSynthesis.cancel();
   const utt = new SpeechSynthesisUtterance(text);
   utt.lang = 'zh-CN';
-  utt.rate = 1.0;
-  utt.pitch = 1.1;
+  utt.rate = 1.06;
+  utt.pitch = 1.22;
+  utt.volume = 1;
+  const selectedVoice = getLixiaoliuVoice();
+  if (selectedVoice) utt.voice = selectedVoice;
   utt.onstart = function(){ isSpeaking = true; setCharacterState('wl-talking'); };
   utt.onend = function(){ isSpeaking = false; setTimeout(function(){ if (!isSpeaking && currentState === 'wl-talking') setCharacterState('wl-idle'); }, 1200); };
   utt.onerror = function(){ isSpeaking = false; setCharacterState('wl-idle'); };
@@ -20784,7 +20807,19 @@ if (document.getElementById('ctrl-reset')) document.getElementById('ctrl-reset')
 // 页面加载：欢迎页尝试自动播放
 window.addEventListener('DOMContentLoaded', function() {
   syncSoundUI();
-  setTimeout(function(){ startFairyScene(); }, 300);
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = function(){ window.speechSynthesis.getVoices(); };
+  }
+  if (window.location.hash === '#map') {
+    sceneStarted = true;
+    if (gestureOverlay) gestureOverlay.classList.add('hidden');
+    welcomeScene.style.display = 'none';
+    mapScene.classList.add('active');
+    initMap();
+  } else {
+    setTimeout(function(){ startFairyScene(); }, 300);
+  }
 });
 </script>
 </body>
