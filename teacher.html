@@ -33,8 +33,8 @@
   .halo-1{width:720px;height:720px;background:radial-gradient(circle,rgba(214,73,110,.13),transparent 65%);top:-260px;right:-160px}
   .halo-2{width:560px;height:560px;background:radial-gradient(circle,rgba(217,164,22,.13),transparent 65%);bottom:-220px;left:-220px}
 
-  /* 角落静态点缀 */
-  .corner-deco{position:fixed;z-index:0;pointer-events:none;opacity:.8}
+  /* 角落静态点缀（淡色、不动、贴边半藏，不抢视线） */
+  .corner-deco{position:fixed;z-index:0;pointer-events:none;opacity:.16}
   .corner-deco svg{display:block}
 
   /* 顶部栏 */
@@ -197,13 +197,13 @@
 
   /* 演示对话高亮 + 动态箭头提示 */
   .demo-spotlight{position:relative}
-  .demo-spotlight .chat{transition:border-color .2s; border:4px solid transparent}
-  .demo-spotlight .chat.active-glow{border-color:var(--c-red)}
-  .spot-hint{position:absolute;top:-40px;right:0;z-index:3;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:#b03a5c;background:var(--c-surface);border:2px solid var(--c-red);padding:6px 13px;border-radius:100px;pointer-events:none}
-  .spot-arrow{animation:spotBounce 1.2s ease-in-out infinite}
-  @keyframes spotBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+  .demo-spotlight .chat{animation:spotGlow 2.4s ease-in-out infinite}
+  @keyframes spotGlow{0%,100%{box-shadow:0 0 0 2px rgba(214,73,110,.45),0 8px 28px -8px rgba(214,73,110,.5)}50%{box-shadow:0 0 0 3px rgba(214,73,110,.8),0 10px 40px -6px rgba(214,73,110,.7)}}
+  .spot-hint{position:absolute;top:-16px;right:14px;z-index:3;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:#b03a5c;background:#fffef9;border:1px solid rgba(214,73,110,.4);padding:6px 13px;border-radius:100px;box-shadow:var(--shadow-md);pointer-events:none}
+  .spot-hint .ic{color:var(--c-red);animation:spotBounce 1.1s ease-in-out infinite}
+  @keyframes spotBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
   .ctl-btn#btnPlay{animation:btnPulse 2s ease-in-out infinite}
-  @keyframes btnPulse{0%,100%{background:var(--grad-black)}50%{background:var(--c-red)}}
+  @keyframes btnPulse{0%,100%{box-shadow:0 0 0 0 rgba(214,73,110,0)}50%{box-shadow:0 0 0 9px rgba(214,73,110,.14)}}
   .panel{background:var(--c-surface);border:1px solid var(--c-line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-sm)}
   .panel h4{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
   .cmp-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--c-line)}
@@ -451,7 +451,7 @@ function icon(name){
   const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("class", "ic");
   const use = document.createElementNS(NS, "use");
-  use.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "#" + id);
+  use.setAttribute("href", "#" + id);
   svg.appendChild(use);
   return svg.outerHTML;
 }
